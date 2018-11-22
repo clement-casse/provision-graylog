@@ -1,0 +1,4 @@
+.vagrant
+installer.run
+*.mmdb
+*.jar

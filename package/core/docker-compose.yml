@@ -1,0 +1,128 @@
+version: '3.7'
+
+networks:
+  monitoring:
+    external: true
+  data-plane:
+    external: true
+
+
+services:
+  graylog:
+    image: graylog/graylog:2.4
+    restart: on-failure
+    healthcheck:
+      disable: true
+    depends_on:
+      - mongo
+      - elasticsearch
+    ports:
+      - target: 514
+        published: 514
+        protocol: tcp
+        mode: host
+      - target: 514
+        published: 514
+        protocol: udp
+        mode: host
+    networks:
+      - data-plane
+      - monitoring
+    volumes:
+      - type: bind
+        source: ./graylog/contentpacks
+        target: /usr/share/graylog/data/contentpacks
+      - type: bind
+        source: ./graylog/lookup-tables
+        target: /usr/share/graylog/data/lookup-tables
+      - type: bind
+        source: ./graylog/plugin
+        target: /usr/share/graylog/plugin
+      - type: bind
+        source: ./graylog/GeoLite2-City.mmdb
+        target: /etc/graylog/server/GeoLite2-City.mmdb
+    environment:
+      GRAYLOG_IS_MASTER: "true"
+      GRAYLOG_CONTENT_PACKS_AUTO_LOAD: "init.json"
+      GRAYLOG_WEB_ENDPOINT_URI: "http://${DOMAIN_NAME}/graylog/api/"
+      GRAYLOG_WEB_LISTEN_URI: "http://0.0.0.0:9000/graylog/"
+      GRAYLOG_REST_LISTEN_URI: "http://0.0.0.0:9000/graylog/api/"
+      GRAYLOG_MONGODB_URI: "mongodb://mongo:27017/graylog"
+      GRAYLOG_ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+      GRAYLOG_PASSWORD_SECRET: "74F6Vq426XFKCOLy3ZnVS1OUeFEhd7i5m4c3quT9RfjKWAifrLWINqTBL0I5tKlohuhxiga"
+      GRAYLOG_ROOT_PASSWORD_SHA2: "${GRAYLOG_ROOT_PASSWORD_SHA2}"
+      GRAYLOG_ALLOW_LEADING_WILDCARD_SEARCHES: "true"
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "data-plane"
+      traefik.port: "9000"
+      traefik.frontend.rule: "PathPrefix:/graylog/;"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+
+
+  mongo:
+    image: mongo:3
+    restart: on-failure
+    networks:
+      - data-plane
+    command: [
+      mongod,
+      --smallfiles,
+      --bind_ip, "0.0.0.0",
+    ]
+    volumes:
+      - type: bind
+        source: "./mongo/data"
+        target: /data/db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+
+
+  elasticsearch:
+    image: elasticsearch:5.6.13
+    restart: on-failure
+    networks:
+      - data-plane
+    expose:
+      - "9200"
+      - "9300"
+    volumes:
+      - type: bind
+        source: ./elasticsearch/elasticsearch.yml
+        target: /etc/elasticsearch/elasticsearch.yml
+      - type: bind
+        source: ./elasticsearch/data
+        target: /usr/share/elasticsearch/data
+      - type: bind
+        source: ./elasticsearch/logs
+        target: /usr/share/elasticsearch/logs
+    environment:
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    command: [
+      -Epath.conf=/etc/elasticsearch/
+    ]
+    ulimits:
+      nproc: 2048
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock:
+        soft: -1
+        hard: -1
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "data-plane"
+      traefik.port: "9200"
+      traefik.frontend.rule: "PathPrefix:/elastic/; PathPrefixStrip:/elastic;"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"

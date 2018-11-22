@@ -1,0 +1,18 @@
+####### CLUSTER CONFIG ######
+
+cluster.name: graylog
+discovery.type: single-node
+
+####### NODE CONFIG ######
+
+node.master: true
+node.data: true
+
+network.host: _eth0:ipv4_
+
+###########
+
+http.host: "0.0.0.0"
+transport.host: "0.0.0.0"
+
+indices.memory.index_buffer_size: 50%

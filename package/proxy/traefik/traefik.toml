@@ -1,0 +1,79 @@
+defaultEntryPoints = ["http", "https"]
+logLevel = "INFO"
+
+[accessLog]
+
+[entryPoints]
+
+  [entryPoints.http]
+    address = ":80"
+    # [entryPoints.http.redirect]
+    #   entryPoint = "https"
+
+  [entryPoints.https]
+    address = ":443"
+    [entryPoints.https.tls]
+    # minVersion = "VersionTLS12"
+    # cipherSuites = [
+    #   "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+    #   "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+    #   "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305",
+    #   "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305",
+    #   "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+    #   "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+    #   "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+    #   "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+    #   "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+    #   "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA"
+    # ]
+    # [[entryPoints.https.tls.certificates]]
+    # CertFile = "/etc/traefik/ssl/traefik-cert.pem"
+    # KeyFile = "/etc/traefik/ssl/traefik-key.pem"
+
+  [entrypoints.traefik]
+    address = ":8080"
+
+
+[api]
+  entrypoint = "traefik"
+  dashboard = true
+
+
+[metrics]
+  [metrics.prometheus]
+    buckets = [0.1,0.3,1.2,5.0]
+
+
+[docker]
+  endpoint = "unix:///var/run/docker.sock"
+  watch = true
+  exposedbydefault = false
+
+
+[file]
+
+
+[backends]
+
+  [backends.traefik]
+    [backends.traefik.servers]
+      [backends.traefik.servers.server0]
+        url = "http://127.0.0.1:8080"
+
+
+[frontends]
+
+  [frontends.traefik]
+    entrypoints = ["http", "https"]
+    backend = "traefik"
+    passHostHeader = true
+
+    # [frontends.traefik.auth]
+    #   [frontends.traefik.auth.basic]
+    #     removeHeaders = true
+    #     users = [
+    #     ]
+
+    [frontends.traefik.routes]
+      [frontends.traefik.routes.route0]
+        rule = "PathPrefixStrip:/traefik; PathPrefix:/traefik;"
