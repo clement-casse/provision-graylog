@@ -192,6 +192,25 @@ deploy_core() {
   docker-compose -f "${baseDir}/core/docker-compose.yml" up -d
 }
 
+printhelp() {
+  echo "
+  Usage:
+    $(basename ${0}) [MAKESELF_OPTIONS] -- [OPTIONS]
+
+  MakeSelf Options are not detailed here, use '$(basename ${0}) --help' to know what are the options.
+
+  Options :
+    -y            | These options make teh self use default values everywhere except at the domain
+    --yes         | name which has no default. Combine this option with '--domain=DOMAIN' to make
+    --assumeyes   | this script be not interactive at all.
+
+    --domain=DOMAIN | Provide the domain name that will be used to reach graylog web ui. An IP
+                    | address can also be used. Avoid using localhost or 127.0.0.1.
+
+    --log2stdout  | Do not print logs to systemd journal but to STDOUT
+  "
+}
+
 main() {
   local user="${__user}"
   local interactive="yes"
@@ -207,6 +226,15 @@ main() {
       --domain=*)
       domainName="${option#*=}"
       shift
+      ;;
+
+      --log2stdout)
+      __logger="stdout"
+      shift
+      ;;
+
+      -h|--help)
+      printhelp && exit 0
       ;;
 
       -*)
