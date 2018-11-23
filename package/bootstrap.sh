@@ -113,6 +113,15 @@ install_docker() {
     ERROR_log 'function="install_docker" message="Cannot install Docker-CE at version %s"' "${docker_version}"
   }
 
+  if [ ! -z "${HTTP_PROXY}" ]; then
+    INFO_log 'function="install_docker" message="Proxy configuration detected, creating %s file"' "/etc/systemd/system/docker.service.d/http-proxy.conf"
+    mkdir -p '/etc/systemd/system/docker.service.d/'
+    envsubst < "${__dir}/docker-service-proxy.conf" > '/etc/systemd/system/docker.service.d/http-proxy.conf'
+    systemctl daemon-reload
+  else
+    INFO_log 'function="install_docker" message="NO proxy configuration detected, skipping %s file creation"' "/etc/systemd/system/docker.service.d/http-proxy.conf"
+  fi
+
   systemctl enable docker && systemctl start docker \
   && {
     DEBUG_log 'function="install_docker" message="Service docker enabled and started"'
