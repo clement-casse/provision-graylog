@@ -8,9 +8,7 @@ package/core/graylog/GeoLite2-City.mmdb:
 	| tar --extract --gzip \
 		--directory="$(dir $@)" \
 		--strip-components=1 \
-		--exclude=*.txt \
-		&& \
-	mv "$(dir $@)/GeoLite2-City.mmdb" "$@"
+		--exclude=*.txt
 
 
 AWS_PLUGIN_VERSION = 2.4.5
