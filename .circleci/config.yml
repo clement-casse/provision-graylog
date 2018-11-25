@@ -9,7 +9,9 @@ jobs:
     steps:
       - run: >
           apt-get update;
-          apt-get install -y makeself;
+          apt-get install -y
+            make
+            makeself;
       - checkout
       - run: make package
       - store_artifacts:
