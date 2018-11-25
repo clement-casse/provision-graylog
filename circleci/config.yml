@@ -1,0 +1,16 @@
+version: 2
+
+jobs:
+  build:
+    branches:
+      only: [ master ]
+    docker:
+      - image: buildpack-deps:18.04-scm
+    steps:
+      - run: >
+          apt-get update;
+          apt-get install -y makeself;
+      - checkout
+      - run: make package
+      - store_artifacts:
+          path: installer.run
