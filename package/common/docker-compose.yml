@@ -8,9 +8,23 @@ networks:
 
 
 services:
-  traefik:
+  # collector:
+  #   image: ''
+  #   restart: always
+  #   networks:
+  #     - monitoring
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "1"
+
+
+  proxy:
     image: traefik:maroilles
     restart: always
+    # depends_on:
+    #   - collector
     networks:
       - monitoring
       - data-plane
@@ -33,8 +47,9 @@ services:
       - type: bind
         source: ./traefik/ssl/
         target: /etc/traefik/ssl/
-    command: >
+    command: [
       --configfile=/etc/traefik/traefik.toml
+    ]
     logging:
       driver: "json-file"
       options:
