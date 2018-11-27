@@ -197,7 +197,7 @@ printhelp() {
   Usage:
     $(basename ${0}) [MAKESELF_OPTIONS] -- [OPTIONS]
 
-  MakeSelf Options are not detailed here, use '$(basename ${0}) --help' to know what are the options.
+  MakeSelf Options are not detailed here, use '$(basename ${0}) --help' to know what the options are.
 
   Options :
     -y            | These options make teh self use default values everywhere except at the domain
