@@ -8,7 +8,8 @@ networks:
 
 
 services:
-  graylog:
+  master:
+    container_name: graylog_master
     image: graylog/graylog:2.4
     restart: on-failure
     healthcheck:
@@ -30,16 +31,16 @@ services:
       - monitoring
     volumes:
       - type: bind
-        source: ./graylog/contentpacks
+        source: ./engine/contentpacks
         target: /usr/share/graylog/data/contentpacks
       - type: bind
-        source: ./graylog/lookup-tables
+        source: ./engine/lookup-tables
         target: /usr/share/graylog/data/lookup-tables
       - type: bind
-        source: ./graylog/plugin
+        source: ./engine/plugin
         target: /usr/share/graylog/plugin
       - type: bind
-        source: ./graylog/GeoLite2-City.mmdb
+        source: ./engine/GeoLite2-City.mmdb
         target: /etc/graylog/server/GeoLite2-City.mmdb
     environment:
       GRAYLOG_IS_MASTER: "true"
