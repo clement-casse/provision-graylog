@@ -186,7 +186,7 @@ deploy_graylog() {
   cp --recursive "${__dir}/graylog" "${baseDir}"
 
   chown 101:101 "${baseDir}/graylog/elasticsearch/elasticsearch.yml" # because ES is started as UID 101 by entrypoint
-  chown 1100:1100 -R "${__dir}/graylog/engine/" # because graylog is started as UID 1100 by entrypoint
+  chown 1100:1100 -R "${baseDir}/graylog/engine/" # because graylog is started as UID 1100 by entrypoint
   export DOMAIN_NAME="${domainName}" GRAYLOG_ROOT_PASSWORD_SHA2="${graylogAdminSHA2}"
   envsubst < "${__dir}/graylog/docker-compose.yml" > "${baseDir}/graylog/docker-compose.yml"
 
