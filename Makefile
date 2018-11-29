@@ -11,11 +11,23 @@ package/graylog/engine/GeoLite2-City.mmdb:
 		--exclude=*.txt
 
 
-AWS_PLUGIN_VERSION = 2.4.5
-DEPTS += package/graylog/engine/plugin/graylog-plugin-aws-$(AWS_PLUGIN_VERSION).jar
-package/graylog/engine/plugin/graylog-plugin-aws-$(AWS_PLUGIN_VERSION).jar:
-	curl -sSL "https://github.com/Graylog2/graylog-plugin-aws/releases/download/$(AWS_PLUGIN_VERSION)/$(notdir $@)" \
-	-o "$@"
+GRAYLOG_PLUGIN_VERSION := 2.4.6
+BUILTIN_PLUGINS = \
+	package/graylog/engine/plugin/graylog-plugin-aws-$(GRAYLOG_PLUGIN_VERSION).jar \
+	package/graylog/engine/plugin/graylog-plugin-beats-$(GRAYLOG_PLUGIN_VERSION).jar \
+	package/graylog/engine/plugin/graylog-plugin-cef-$(GRAYLOG_PLUGIN_VERSION).jar \
+	package/graylog/engine/plugin/graylog-plugin-collector-$(GRAYLOG_PLUGIN_VERSION).jar \
+	package/graylog/engine/plugin/graylog-plugin-map-widget-$(GRAYLOG_PLUGIN_VERSION).jar \
+	package/graylog/engine/plugin/graylog-plugin-netflow-$(GRAYLOG_PLUGIN_VERSION).jar \
+	package/graylog/engine/plugin/graylog-plugin-pipeline-processor-$(GRAYLOG_PLUGIN_VERSION).jar \
+	package/graylog/engine/plugin/graylog-plugin-threatintel-$(GRAYLOG_PLUGIN_VERSION).jar
+DEPTS += $(BUILTIN_PLUGINS)
+$(BUILTIN_PLUGINS):
+	docker run \
+		--rm \
+		-v '$(shell pwd)/$(dir $@):$(shell pwd)/$(dir $@)' \
+		graylog/graylog:2.4 \
+		cp ./plugin/$(notdir $@) $(shell pwd)/$@
 
 
 SSO_PLUGIN_VERSION = 2.4.2
