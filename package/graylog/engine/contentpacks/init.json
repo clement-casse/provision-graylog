@@ -47,6 +47,33 @@
             "type":"org.graylog2.inputs.syslog.tcp.SyslogTCPInput",
             "global":true,
             "extractors":[]
+        },
+        {
+            "id":"5bffc3841aa80a00013f366c",
+            "title":"Internal",
+            "configuration":{
+                "recv_buffer_size":1048576,
+                "tcp_keepalive":false,
+                "use_null_delimiter":false,
+                "tls_client_auth_cert_file":"",
+                "force_rdns":true,
+                "bind_address":"0.0.0.0",
+                "tls_cert_file":"",
+                "store_full_message":true,
+                "expand_structured_data":false,
+                "port":1514,
+                "tls_key_file":"",
+                "tls_enable":false,
+                "tls_key_password":"",
+                "max_message_size":2097152,
+                "tls_client_auth":"disabled",
+                "override_source":null,
+                "allow_override_date":false
+            },
+            "static_fields":{},
+            "type":"org.graylog2.inputs.syslog.tcp.SyslogTCPInput",
+            "global":true,
+            "extractors":[]
         }
     ],
     "streams":[
@@ -335,12 +362,45 @@
         }
     ],
     "lookup_tables":[
-
+        {
+            "title":"GeoIP City Lookup Table",
+            "description":"Retrieve Geolocation of public IPs",
+            "name":"geoip-city-lookup-table",
+            "cache_name":"geoip-city-cache",
+            "data_adapter_name":"geoip-city-database",
+            "default_single_value":"",
+            "default_single_value_type":"NULL",
+            "default_multi_value":"",
+            "default_multi_value_type":"NULL"
+        }
     ],
     "lookup_caches":[
-
+        {
+            "title":"GeoIP City Cache",
+            "description":"GeoIP cache for IP -> City, Country association from MaxMind DB",
+            "name":"geoip-city-cache",
+            "config":{
+                "type":"guava_cache",
+                "max_size":1000,
+                "expire_after_access":6,
+                "expire_after_access_unit":"HOURS",
+                "expire_after_write":0,
+                "expire_after_write_unit":null
+            }
+        }
     ],
     "lookup_data_adapters":[
-
+        {
+            "title":"GeoIP City Database",
+            "description":"Public IP -> City, Country Adapter",
+            "name":"geoip-city-database",
+            "config":{
+                "type":"maxmind_geoip",
+                "path":"/etc/graylog/server/GeoLite2-City.mmdb",
+                "database_type":"MAXMIND_CITY",
+                "check_interval":1,
+                "check_interval_unit":"HOURS"
+            }
+          }
     ]
 }
