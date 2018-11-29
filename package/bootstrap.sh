@@ -162,7 +162,7 @@ provision_docker_networks() {
   sleep 5
 }
 
-deploy_proxy() {
+deploy_common() {
   local baseDir="${1}" && shift;
   local domainName="${1}" && shift;
 
@@ -171,25 +171,26 @@ deploy_proxy() {
   # openssl req -new -key "${__dir}/proxy/ssl/traefik-key.pem" -out "${__dir}/proxy/ssl/traefik.csr" \
   #   -subj "/C=NL/ST=Zuid Holland/L=Rotterdam/O=Sparkling Network/OU=IT Department/CN=${domainName}"
 
-  cp --recursive "${__dir}/proxy" "${baseDir}"
+  cp --recursive "${__dir}/common" "${baseDir}"
 
-  docker-compose -f "${baseDir}/proxy/docker-compose.yml" up -d
+  docker-compose -f "${baseDir}/common/docker-compose.yml" up -d
 }
 
-deploy_core() {
+deploy_graylog() {
   local baseDir="${1}" && shift;
   local domainName="${1}" && shift;
   local graylogAdminPass="${1}" && shift;
 
   local graylogAdminSHA2=$(echo -n "${graylogAdminPass}" | sha256sum | cut -d" " -f1)
 
-  cp --recursive "${__dir}/core" "${baseDir}"
+  cp --recursive "${__dir}/graylog" "${baseDir}"
 
-  chown 101:101 "${baseDir}/core/elasticsearch/elasticsearch.yml" # because ES is started as UID 101 by entrypoint
+  chown 101:101 "${baseDir}/graylog/elasticsearch/elasticsearch.yml" # because ES is started as UID 101 by entrypoint
+  chown 1100:1100 -R "${__dir}/graylog/engine/" # because graylog is started as UID 1100 by entrypoint
   export DOMAIN_NAME="${domainName}" GRAYLOG_ROOT_PASSWORD_SHA2="${graylogAdminSHA2}"
-  envsubst < "${__dir}/core/docker-compose.yml" > "${baseDir}/core/docker-compose.yml"
+  envsubst < "${__dir}/graylog/docker-compose.yml" > "${baseDir}/graylog/docker-compose.yml"
 
-  docker-compose -f "${baseDir}/core/docker-compose.yml" up -d
+  docker-compose -f "${baseDir}/graylog/docker-compose.yml" up -d
 }
 
 printhelp() {
@@ -300,7 +301,7 @@ main() {
   fi
   provision_base "${__stacksDir}"
 
-  deploy_proxy "${__stacksDir}" "${domainName}"
+  deploy_common "${__stacksDir}" "${domainName}"
 
   message="
   Graylog admin password need to be initialized, type the password of the user 'admin' of Graylog"
@@ -311,7 +312,7 @@ main() {
     fi
   fi
 
-  deploy_core "${__stacksDir}" "${domainName}" "${__graylogAdminPass}"
+  deploy_graylog "${__stacksDir}" "${domainName}" "${__graylogAdminPass}"
 
   clear
   echo "$(tput bold)

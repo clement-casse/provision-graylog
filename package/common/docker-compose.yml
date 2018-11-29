@@ -8,23 +8,39 @@ networks:
 
 
 services:
-  # collector:
-  #   image: ''
-  #   restart: always
-  #   networks:
-  #     - monitoring
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "1"
+  collector:
+    image: jumanjiman/rsyslog
+    restart: always
+    networks:
+      - monitoring
+    ports:
+      - target: 1514
+        published: 1514
+        protocol: tcp
+        mode: host
+      - target: 1514
+        published: 1514
+        protocol: udp
+        mode: host
+    volumes:
+      - type: bind
+        source: ./rsyslog/rsyslogd.conf
+        target: /etc/rsyslogd.conf
+      - type: bind
+        source: /var/log/secure
+        target: /var/log/secure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
 
 
   proxy:
     image: traefik:maroilles
     restart: always
-    # depends_on:
-    #   - collector
+    depends_on:
+      - collector
     networks:
       - monitoring
       - data-plane
