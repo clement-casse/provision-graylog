@@ -12,17 +12,11 @@ package/graylog/engine/GeoLite2-City.mmdb:
 
 
 GRAYLOG_PLUGIN_VERSION := 2.4.6
-BUILTIN_PLUGINS = \
-	package/graylog/engine/plugin/graylog-plugin-aws-$(GRAYLOG_PLUGIN_VERSION).jar \
-	package/graylog/engine/plugin/graylog-plugin-beats-$(GRAYLOG_PLUGIN_VERSION).jar \
-	package/graylog/engine/plugin/graylog-plugin-cef-$(GRAYLOG_PLUGIN_VERSION).jar \
-	package/graylog/engine/plugin/graylog-plugin-collector-$(GRAYLOG_PLUGIN_VERSION).jar \
-	package/graylog/engine/plugin/graylog-plugin-map-widget-$(GRAYLOG_PLUGIN_VERSION).jar \
-	package/graylog/engine/plugin/graylog-plugin-netflow-$(GRAYLOG_PLUGIN_VERSION).jar \
-	package/graylog/engine/plugin/graylog-plugin-pipeline-processor-$(GRAYLOG_PLUGIN_VERSION).jar \
-	package/graylog/engine/plugin/graylog-plugin-threatintel-$(GRAYLOG_PLUGIN_VERSION).jar
-DEPTS += $(BUILTIN_PLUGINS)
-$(BUILTIN_PLUGINS):
+BUILTIN_PLUGINS = aws beats cef collector map-widget netflow pipeline-processor threatintel
+PLUGINS_FULL_TARGETS := $(addprefix package/graylog/engine/plugin/graylog-plugin-,$(addsuffix -$(GRAYLOG_PLUGIN_VERSION).jar,$(BUILTIN_PLUGINS)))
+
+DEPTS += $(PLUGINS_FULL_TARGETS)
+$(PLUGINS_FULL_TARGETS):
 	docker run \
 		--rm \
 		-v '$(shell pwd)/$(dir $@):$(shell pwd)/$(dir $@)' \
