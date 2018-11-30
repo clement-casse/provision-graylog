@@ -17,12 +17,7 @@ PLUGINS_FULL_TARGETS := $(addprefix package/graylog/engine/plugin/graylog-plugin
 
 DEPTS += $(PLUGINS_FULL_TARGETS)
 $(PLUGINS_FULL_TARGETS):
-	docker run \
-		--rm \
-		-v '$(shell pwd)/$(dir $@):$(shell pwd)/$(dir $@)' \
-		graylog/graylog:2.4 \
-		cp ./plugin/$(notdir $@) $(shell pwd)/$@
-
+	docker cp $(shell docker container run --rm --detach graylog/graylog:2.4 sleep 10):/usr/share/graylog/plugin/$(notdir $@) $@
 
 SSO_PLUGIN_VERSION = 2.4.2
 DEPTS += package/graylog/engine/plugin/graylog-plugin-auth-sso-$(SSO_PLUGIN_VERSION).jar
