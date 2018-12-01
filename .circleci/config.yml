@@ -33,7 +33,6 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             set -o xtrace;
-            ls -hAlF ./artifacts/
             VERSION="$(git describe --always --exact-match --abbrev=0 HEAD)"
             ghr \
               -t ${GITHUB_TOKEN} \
