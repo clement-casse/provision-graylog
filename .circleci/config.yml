@@ -53,6 +53,7 @@ workflows:
       - publish-github-release:
           requires:
             - build
+          context: GitHub
           filters:
             branches:
               ignore: /.*/
