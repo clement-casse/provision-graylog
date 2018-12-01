@@ -18,20 +18,21 @@ jobs:
           docker_layer_caching: true
       - checkout
       - run: make package
-      - store_artifacts:
-          path: installer.run
+      - persist_to_workspace:
+          paths:
+          - installer.run
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
     steps:
       - checkout
       - attach_workspace:
-          at: ./artifacts
+          at: /tmp/artifacts
       - run:
           name: "Publish Release on GitHub"
           command: |
             set -o xtrace;
-            printenv
+            ls -hAlF ./artifacts/
             VERSION="$(git describe --always --exact-match --abbrev=0 HEAD)"
             ghr \
               -t ${GITHUB_TOKEN} \
@@ -40,7 +41,7 @@ jobs:
               -c ${CIRCLE_SHA1} \
               -delete \
               ${VERSION} \
-              ./artifacts/
+              /tmp/artifacts/
 
 workflows:
   version: 2
