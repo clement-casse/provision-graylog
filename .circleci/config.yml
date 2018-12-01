@@ -19,6 +19,7 @@ jobs:
       - checkout
       - run: make package
       - persist_to_workspace:
+          root: ./
           paths:
           - installer.run
   publish-github-release:
