@@ -11,6 +11,7 @@ services:
   collector:
     image: jumanjiman/rsyslog
     restart: always
+    hostname: log_collector
     networks:
       - monitoring
     ports:
@@ -27,8 +28,11 @@ services:
         source: ./rsyslog/rsyslogd.conf
         target: /etc/rsyslogd.conf
       - type: bind
-        source: /var/log/secure
-        target: /var/log/secure
+        source: ./rsyslog/queues
+        target: /var/run/rsyslog/dev
+      - type: bind
+        source: /var/log
+        target: /var/log
     logging:
       driver: "json-file"
       options:
