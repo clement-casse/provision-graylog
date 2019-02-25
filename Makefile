@@ -11,15 +11,15 @@ package/graylog/engine/GeoLite2-City.mmdb:
 		--exclude=*.txt
 
 
-GRAYLOG_PLUGIN_VERSION := 2.4.6
-BUILTIN_PLUGINS = aws beats cef collector map-widget netflow pipeline-processor threatintel
+GRAYLOG_PLUGIN_VERSION := 3.0.0
+BUILTIN_PLUGINS = aws collector threatintel
 PLUGINS_FULL_TARGETS := $(addprefix package/graylog/engine/plugin/graylog-plugin-,$(addsuffix -$(GRAYLOG_PLUGIN_VERSION).jar,$(BUILTIN_PLUGINS)))
 
 DEPTS += $(PLUGINS_FULL_TARGETS)
 $(PLUGINS_FULL_TARGETS):
-	docker cp $(shell docker container run --rm --detach graylog/graylog:2.4 sleep 10):/usr/share/graylog/plugin/$(notdir $@) $@
+	docker cp $(shell docker container run --rm --detach graylog/graylog:3.0.0 sleep 10):/usr/share/graylog/plugin/$(notdir $@) $@
 
-SSO_PLUGIN_VERSION = 2.4.2
+SSO_PLUGIN_VERSION = 3.0.0
 DEPTS += package/graylog/engine/plugin/graylog-plugin-auth-sso-$(SSO_PLUGIN_VERSION).jar
 package/graylog/engine/plugin/graylog-plugin-auth-sso-$(SSO_PLUGIN_VERSION).jar:
 	curl -sSL "https://github.com/Graylog2/graylog-plugin-auth-sso/releases/download/$(SSO_PLUGIN_VERSION)/graylog-plugin-auth-sso-$(SSO_PLUGIN_VERSION).jar" \

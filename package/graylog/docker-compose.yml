@@ -10,7 +10,7 @@ networks:
 services:
   master:
     container_name: graylog_master
-    image: graylog/graylog:2.4
+    image: graylog/graylog:3.0.0
     restart: on-failure
     healthcheck:
       disable: true
@@ -44,10 +44,9 @@ services:
         target: /etc/graylog/server/GeoLite2-City.mmdb
     environment:
       GRAYLOG_IS_MASTER: "true"
-      GRAYLOG_CONTENT_PACKS_AUTO_LOAD: "init.json"
-      GRAYLOG_WEB_ENDPOINT_URI: "http://${DOMAIN_NAME}/graylog/api/"
-      GRAYLOG_WEB_LISTEN_URI: "http://0.0.0.0:9000/graylog/"
-      GRAYLOG_REST_LISTEN_URI: "http://0.0.0.0:9000/graylog/api/"
+      GRAYLOG_HTTP_BIND_ADDRESS: "0.0.0.0:9000"
+      GRAYLOG_HTTP_PUBLISH_URI: "http://${DOMAIN_NAME}/"
+      GRAYLOG_HTTP_EXTERNAL_URI: "http://${DOMAIN_NAME}/"
       GRAYLOG_MONGODB_URI: "mongodb://mongo:27017/graylog"
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
       GRAYLOG_PASSWORD_SECRET: "74F6Vq426XFKCOLy3ZnVS1OUeFEhd7i5m4c3quT9RfjKWAifrLWINqTBL0I5tKlohuhxiga"
@@ -57,7 +56,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "data-plane"
       traefik.port: "9000"
-      traefik.frontend.rule: "PathPrefix:/graylog/;"
+      traefik.frontend.rule: "PathPrefix:/;"
     logging:
       driver: "json-file"
       options:

@@ -320,7 +320,7 @@ main() {
   clear
   echo "$(tput bold)
   Graylog has finally been deployed !
-    Graylog should be available very soon at http://${domainName}/graylog/
+    Graylog should be available very soon at http://${domainName}/
       ==> Username: admin
       ==> Password: ${__graylogAdminPass}
 
