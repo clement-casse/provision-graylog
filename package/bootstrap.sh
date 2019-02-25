@@ -172,8 +172,11 @@ deploy_common() {
   #   -subj "/C=NL/ST=Zuid Holland/L=Rotterdam/O=Sparkling Network/OU=IT Department/CN=${domainName}"
 
   cp --recursive "${__dir}/common" "${baseDir}"
+  cp "${__dir}/rsyslog-ssh-messages.conf" "/etc/rsyslog.d/50-sshlogs.conf"
 
   docker-compose -f "${baseDir}/common/docker-compose.yml" up -d
+
+  systemctl restart rsyslog.service
 }
 
 deploy_graylog() {

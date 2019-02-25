@@ -30,9 +30,6 @@ services:
       - type: bind
         source: ./rsyslog/queues
         target: /var/run/rsyslog/dev
-      - type: bind
-        source: /var/log
-        target: /var/log
     logging:
       driver: "json-file"
       options:
