@@ -7,6 +7,10 @@ networks:
     external: true
 
 
+volumes:
+  es_data: {}
+
+
 services:
   master:
     container_name: graylog_master
@@ -88,8 +92,8 @@ services:
       - type: bind
         source: ./elasticsearch/elasticsearch.yml
         target: /etc/elasticsearch/elasticsearch.yml
-      - type: bind
-        source: ./elasticsearch/data
+      - type: volume
+        source: es_data
         target: /usr/share/elasticsearch/data
       - type: bind
         source: ./elasticsearch/logs
