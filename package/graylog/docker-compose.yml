@@ -17,15 +17,6 @@ services:
     depends_on:
       - mongo
       - elasticsearch
-    ports:
-      - target: 514
-        published: 514
-        protocol: tcp
-        mode: host
-      - target: 514
-        published: 514
-        protocol: udp
-        mode: host
     networks:
       - data-plane
       - monitoring
