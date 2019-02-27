@@ -1,0 +1,30 @@
+version: '3.7'
+
+
+networks:
+  monitoring:
+    external: true
+
+
+services:
+  relay:
+    image: jumanjiman/rsyslog
+    restart: always
+    hostname: log_injector
+    networks:
+      - monitoring
+    volumes:
+      - type: bind
+        source: ./rsyslog/rsyslogd.conf
+        target: /etc/rsyslogd.conf
+      - type: bind
+        source: ./rsyslog/queues
+        target: /var/run/rsyslog/dev
+      - type: bind
+        source: ./logs
+        target: /logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"

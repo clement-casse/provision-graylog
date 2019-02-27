@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__user="${SUDO_USER:-$USER}"
+__homeDir="$(eval echo ~"${__user}")"
+__logger="stdout"
+
+
+log() {
+  local level=${1} && shift
+  local logger=${1} && shift
+  case ${logger} in
+    stdout)
+    printf '%s [%s] %s: %s\n' \
+      "$(date +%FT%T%Z)" \
+      "$(echo "${level}" | cut -c1-4 | tr '[:lower:]' '[:upper:]')" \
+      "$(basename "${0}")" \
+      "$(printf "${@}")"
+    ;;
+
+    systemd-cat)
+    printf '%s\n' "$(printf "${@}")" | systemd-cat \
+      --identifier="$(basename "${0}")" \
+      --priority="${level}"
+    ;;
+  esac
+}
+
+DEBUG_log() {
+  log 'debug' "${__logger}" "${@}"
+}
+
+INFO_log() {
+  log 'info' "${__logger}" "${@}"
+}
+
+NOTICE_log() {
+  log 'notice' "${__logger}" "${@}"
+}
+
+WARN_log() {
+  log 'warning' "${__logger}" "${@}"
+}
+
+ERROR_log() {
+  log 'err' "${__logger}" "${@}"
+}
+
+realpath() {
+  case ${1} in
+    /*) echo "${1}" ;;
+    ~/*) echo "${__homeDir}/${1#*/}" ;;
+    *) echo "${PWD}/${1#./}" ;;
+  esac
+}
+
+inject_logs() {
+  docker-compose --file "/etc/siem/injector/docker-compose.yml" down;
+  docker-compose --file "/etc/siem/injector/docker-compose.yml" up;
+}
+
+clean_logs() {
+  docker-compose --file "/etc/siem/graylog/docker-compose.yml" down -v;
+  docker-compose --file "/etc/siem/graylog/docker-compose.yml" up -d;
+}
+
+apply_local_log_fwd() {
+  cat > "/etc/rsyslog.d/50-sshlogs.conf" <<-'EOF'
+	if ( $syslogfacility-text == [ "auth", "authpriv" ] ) then {
+	  action(
+	    type="omfwd"
+	    Target="127.0.0.1"
+	    Port="1514"
+	    Protocol="tcp"
+	  )
+	}
+	EOF
+  systemctl restart rsyslog.service
+}
+
+
+printhelp() {
+  echo "
+  Usage :
+    $(basename ${BASH_SOURCE[0]}) [OPTIONS] COMMAND [args]
+  
+  Options :
+    
+  
+  Commands :
+    inject   
+
+    clean
+  "
+}
+
+main() {
+
+  # Parse Options
+  # Option names are preceeded by '--' and followed by '='
+  for option in "$@"; do
+    case ${option} in
+      --help)
+      printhelp && exit 0
+      ;;
+
+      --*)
+      ERROR_log "Unknown option '${option}'"
+      printhelp && exit -1
+      ;;
+
+      *)
+      break ;;
+    esac
+  done
+
+  # Parse the command and call the appropriate function
+  local subcommand=${1:-"help"} && shift
+  case ${subcommand} in
+    inject)
+    inject_logs "${@}"
+    ;;
+
+    clean)
+    clean_logs "${@}"
+    ;;
+
+    *)
+    printhelp && exit -1
+    ;;
+  esac
+}
+
+if [[ "$0" == "$BASH_SOURCE" ]]; then
+  main "$@"
+fi

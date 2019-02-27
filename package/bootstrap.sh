@@ -172,11 +172,8 @@ deploy_common() {
   #   -subj "/C=NL/ST=Zuid Holland/L=Rotterdam/O=Sparkling Network/OU=IT Department/CN=${domainName}"
 
   cp --recursive "${__dir}/common" "${baseDir}"
-  cp "${__dir}/rsyslog-ssh-messages.conf" "/etc/rsyslog.d/50-sshlogs.conf"
 
   docker-compose -f "${baseDir}/common/docker-compose.yml" up -d
-
-  systemctl restart rsyslog.service
 }
 
 deploy_graylog() {
@@ -196,6 +193,17 @@ deploy_graylog() {
   docker-compose -f "${baseDir}/graylog/docker-compose.yml" up -d
 }
 
+provision_injector() {
+  local baseDir="${1}" && shift;
+  local utilityInstallPath="${1}" && shift;
+
+  cp --recursive "${__dir}/injector" "${baseDir}"
+  cp "${__dir}/tp" "${utilityInstallPath}/tp"
+  chmod 755 "${utilityInstallPath}/tp"
+
+  docker-compose -f "${baseDir}/injector/docker-compose.yml" pull
+}
+
 printhelp() {
   echo "
   Usage:
@@ -204,7 +212,7 @@ printhelp() {
   MakeSelf Options are not detailed here, use '$(basename ${0}) --help' to know what the options are.
 
   Options :
-    -y            | These options make teh self use default values everywhere except at the domain
+    -y            | These options make the script use default values everywhere except at the domain
     --yes         | name which has no default. Combine this option with '--domain=DOMAIN' to make
     --assumeyes   | this script be not interactive at all.
 
@@ -219,6 +227,7 @@ main() {
   local user="${__user}"
   local interactive="yes"
   local domainName=""
+  local utilityInstallPath="/usr/sbin"
 
   for option in "${@}"; do
     case ${option} in
@@ -316,6 +325,18 @@ main() {
   fi
 
   deploy_graylog "${__stacksDir}" "${domainName}" "${__graylogAdminPass}"
+
+
+  message="
+  An utility script to do the workshop will be installed, type the path from where you want to launch it"
+  if [ "${interactive}" == "yes" ]; then
+    read -p "${message} $(tput setaf 3)[ ${utilityInstallPath} ]$(tput sgr0) " answer
+    if [ "${answer}" ]; then
+      utilityInstallPath="${answer}"
+    fi
+  fi
+
+  provision_injector "${__stacksDir}" "${utilityInstallPath}"
 
   clear
   echo "$(tput bold)
