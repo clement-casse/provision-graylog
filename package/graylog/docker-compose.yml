@@ -26,9 +26,6 @@ services:
       - monitoring
     volumes:
       - type: bind
-        source: ./engine/contentpacks
-        target: /usr/share/graylog/data/contentpacks
-      - type: bind
         source: ./engine/lookup-tables
         target: /usr/share/graylog/data/lookup-tables
       - type: bind
