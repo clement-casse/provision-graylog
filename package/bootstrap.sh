@@ -65,6 +65,20 @@ ERROR_log() {
   log 'err' "${__logger}" "${@}"
 }
 
+is_installed() {
+  local program="${1}" && shift
+
+  command -v "${program}" > /dev/null 2>&1
+}
+
+realpath() {
+  case ${1} in
+    /*) echo "${1}" ;;
+    ~/*) echo "${__homeDir}/${1#*/}" ;;
+    *) echo "${__dir}/${1#./}" ;;
+  esac
+}
+
 install_docker() {
   local docker_version="${1}" && shift
 
@@ -162,16 +176,40 @@ provision_docker_networks() {
   sleep 5
 }
 
+gen_certs() {
+  local domain="${1}" && shift;
+  local target_dir="$(realpath ${1})" && shift;
+
+  local country="FR"
+  local state="Occitanie"
+  local locality="Toulouse"
+  local organization="none"
+  local organizationalunit="IT"
+  local email="never_ever_sendmeanemail@nope.eu"
+
+  if ! is_installed "openssl"; then
+    yum install --assumeyes openssl
+  fi
+
+  openssl req \
+    -x509 \
+    -nodes \
+    -newkey rsa:4096 \
+    -keyout "${target_dir}/${domain}.key" \
+    -out "${target_dir}/${domain}.cert" \
+    -days 365 \
+    -subj "/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${organizationalunit}/CN=${domain}/emailAddress=${email}"
+}
+
+
 deploy_common() {
   local baseDir="${1}" && shift;
   local domainName="${1}" && shift;
 
-  yum install --assumeyes --quiet openssl
-  # openssl genrsa -out "${__dir}/proxy/ssl/traefik-key.pem" 2048
-  # openssl req -new -key "${__dir}/proxy/ssl/traefik-key.pem" -out "${__dir}/proxy/ssl/traefik.csr" \
-  #   -subj "/C=NL/ST=Zuid Holland/L=Rotterdam/O=Sparkling Network/OU=IT Department/CN=${domainName}"
-
   cp --recursive "${__dir}/common" "${baseDir}"
+
+  export DOMAIN="${domainName}"
+  envsubst < "${__dir}/common/traefik/traefik.toml" > "${baseDir}/common/traefik/traefik.toml"
 
   docker-compose -f "${baseDir}/common/docker-compose.yml" up -d
 }
@@ -283,23 +321,27 @@ main() {
 
   message="
   Docker is required, enter the version of docker you want to see installed on this machine."
-  if [ "${interactive}" == "yes" ]; then
-    read -p "${message} $(tput setaf 3)[ ${__dockerVersion} ]$(tput sgr0) " answer
-    if [ "${answer}" ]; then
-      __dockerVersion="${answer}"
+  if ! is_installed "docker"; then
+    if [ "${interactive}" == "yes" ]; then
+      read -p "${message} $(tput setaf 3)[ ${__dockerVersion} ]$(tput sgr0) " answer
+      if [ "${answer}" ]; then
+        __dockerVersion="${answer}"
+      fi
     fi
+    install_docker "${__dockerVersion}"
   fi
-  install_docker "${__dockerVersion}"
 
   message="
   Docker-compose is also required, enter the version of docker-compose you want to see installed on this machine."
-  if [ "${interactive}" == "yes" ]; then
-    read -p "${message} $(tput setaf 3)[ ${__dockerComposeVersion} ]$(tput sgr0) " answer
-    if [ "${answer}" ]; then
-      __dockerComposeVersion="${answer}"
+  if ! is_installed "docker-compose"; then
+    if [ "${interactive}" == "yes" ]; then
+      read -p "${message} $(tput setaf 3)[ ${__dockerComposeVersion} ]$(tput sgr0) " answer
+      if [ "${answer}" ]; then
+        __dockerComposeVersion="${answer}"
+      fi
     fi
+    install_docker_compose "${__dockerComposeVersion}"
   fi
-  install_docker_compose "${__dockerComposeVersion}"
 
   provision_docker_networks
 
@@ -312,6 +354,12 @@ main() {
     fi
   fi
   provision_base "${__stacksDir}"
+
+  if [[ ! -f "${__stacksDir}/common/traefik/ssl/${domainName}.key" ]] && \
+     [[ ! -f "${__stacksDir}/common/traefik/ssl/${domainName}.cert" ]]
+  then
+    gen_certs "${domainName}" "${__stacksDir}/common/traefik/ssl"
+  fi
 
   deploy_common "${__stacksDir}" "${domainName}"
 
@@ -354,4 +402,6 @@ main() {
   $(tput sgr0)"
 }
 
-main "${@}"
+if [[ "$0" == "$BASH_SOURCE" ]]; then
+  main "$@"
+fi
